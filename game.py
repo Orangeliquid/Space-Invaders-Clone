@@ -1,0 +1,167 @@
+import pygame
+import sys
+import random
+from entities import Player, Baseline, Shield, Enemy, Ufo, EnemyProjectile
+from score import Lives, Scoreboard
+from config import WINDOW_WIDTH, WINDOW_HEIGHT, ENEMY_PROJECTILE_SPAWN_CHANCE
+
+
+def main(enemy_speed, starting_score, max_projectile_cooldown):
+    pygame.init()
+    clock = pygame.time.Clock()
+
+    window_width, window_height = WINDOW_WIDTH, WINDOW_HEIGHT
+    screen = pygame.display.set_mode((window_width, window_height))
+    pygame.display.set_caption("Space Invaders")
+
+    # Create scoreboard on screen
+    scoreboard = Scoreboard(starting_score)
+
+    # Create Baseline on screen
+    baseline = Baseline()
+
+    # Creates the player platform
+    player = Player(max_projectile_cooldown)
+
+    # Create the lives object and pass then player instance
+    lives = Lives(player, 3)  # Assuming the player starts with 3 lives
+
+    # Create the UFO object
+    ufo_instance = Ufo()
+    ufo_single = pygame.sprite.GroupSingle(ufo_instance)
+
+    # Create the shields
+    shields = []
+    shield_x_positions = [150, 350, 550, 750]
+    for x in shield_x_positions:
+        shield = Shield(x)
+        shields.append(shield)
+
+    # Create a group to hold all the enemy sprites
+    all_enemies = pygame.sprite.Group()
+
+    # Create a group to hold all the enemy projectiles
+    enemy_projectile_group = pygame.sprite.Group()
+
+    # Create and add 40 point aliens (type 'A')
+    for i in range(11):
+        enemy = Enemy(50 + i * 60, 100, 'A', speed=enemy_speed)
+        all_enemies.add(enemy)
+
+    # Create and add 20 point aliens (type 'B')
+    for i in range(11):
+        for j in range(2):
+            enemy = Enemy(50 + i * 60, 150 + j * 50, 'B', speed=enemy_speed)
+            all_enemies.add(enemy)
+
+    # Create and add 10 point aliens (type 'C')
+    for i in range(11):
+        for j in range(2):
+            enemy = Enemy(50 + i * 60, 250 + j * 50, 'C', speed=enemy_speed)
+            all_enemies.add(enemy)
+            print(all_enemies)
+
+    # Add a flag to check if the spacebar is pressed
+    space_pressed = False
+
+    # Main game loop
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    player.move_left = True
+                elif event.key == pygame.K_RIGHT:
+                    player.move_right = True
+                elif event.key == pygame.K_SPACE:
+                    # Set the flag to indicate spacebar is pressed
+                    space_pressed = True
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_LEFT:
+                    player.move_left = False
+                elif event.key == pygame.K_RIGHT:
+                    player.move_right = False
+                elif event.key == pygame.K_SPACE:
+                    # Reset the flag when spacebar is released
+                    space_pressed = False
+
+        # Shoot if spacebar is held down
+        if space_pressed:
+            player.shoot()
+
+        # Move the player based on key states
+        if player.move_left:
+            player.move("left")
+        if player.move_right:
+            player.move("right")
+
+        # Update game states
+        player.update_projectiles(screen, all_enemies, ufo_single, scoreboard)
+        all_enemies.update()
+        enemy_projectile_group.update(screen)
+        ufo_single.update(screen)
+
+        # Check if there's no enemy projectile on the screen, then spawn a new one
+        if not enemy_projectile_group:
+            if random.randint(0, 1000) <= ENEMY_PROJECTILE_SPAWN_CHANCE:
+                new_enemy_projectile = EnemyProjectile()
+                enemy_projectile_group.add(new_enemy_projectile)
+
+        # Clear the screen
+        screen.fill((0, 0, 0))
+
+        # Draw static scoreboard
+        scoreboard.draw_starting_score(screen)
+        scoreboard.draw_static_score(screen)
+
+        # Draw Baseline
+        baseline.draw(screen)
+        baseline.draw_credits_text(screen)
+
+        # Draw Lives
+        lives.draw_lives_text(screen)
+        lives.draw_player_sprites(screen)
+
+        # Draw the player/platform
+        player.draw(screen)
+
+        # Draw the shields
+        for shield in shields:
+            shield.draw(screen)
+
+        # Check if there are enemies to move
+        if len(all_enemies) > 0:
+            # Move the enemy group
+            Enemy.move_group()
+
+        # draw projectiles
+        player.draw_projectiles(screen)
+
+        # draw the enemies
+        all_enemies.draw(screen)
+
+        # Check if all enemies are dead beside ufo
+        if all_enemies is None or len(all_enemies) == 0:
+            print("All enemies are dead")
+
+            # Increase the speed of all enemies
+            enemy_speed += 1
+
+            # Maintain current score
+            last_score = scoreboard.score
+
+            max_projectile_cooldown -= .5
+
+            # Restart the level or proceed to the next level
+            main(enemy_speed, last_score, max_projectile_cooldown)
+        else:
+            pass
+
+        # Update the display
+        pygame.display.flip()
+
+        # Cap the frame rate
+        clock.tick(60)
+
