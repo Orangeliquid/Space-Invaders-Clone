@@ -1,5 +1,5 @@
 import pygame
-from config import DEFENDER_COLOR, UFO_COLOR, FONT_SIZE, FONT_NAME, WINDOW_WIDTH, WINDOW_HEIGHT
+from config import DEFENDER_COLOR, UFO_COLOR, FONT_SIZE, FONT_NAME, WINDOW_WIDTH, WINDOW_HEIGHT, SHIELD_DAMAGE_LIST
 import random
 
 ''' Entities to create for game
@@ -49,7 +49,7 @@ class Player:
             self.projectiles.add(projectile)
             self.projectile_cooldown = self.projectile_cooldown_max
 
-    def update_projectiles(self, screen, alien_list, ufo_single, scoreboard):
+    def update_projectiles(self, screen, alien_list, ufo_single, scoreboard, all_shields):
         self.projectiles.update()
         for projectile in self.projectiles.copy():
             if projectile.rect.bottom <= 0:
@@ -63,11 +63,19 @@ class Player:
                     enemy.explode(screen)
                     scoreboard.update_score(20)
                     self.projectiles.remove(projectile)
+
+                # Check for collision with Ufo
                 ufo_hit = pygame.sprite.spritecollideany(projectile, ufo_single)
                 if ufo_hit:
                     print("Ufo Hit")
                     ufo_hit.explode(screen)
                     scoreboard.update_score(100)
+
+                # Check for collision with shields
+                shield_hit_list = pygame.sprite.spritecollide(projectile, all_shields, False)
+                for shield in shield_hit_list:
+                    shield.take_damage(screen)
+                    self.projectiles.remove(projectile)
 
         self.projectile_cooldown -= 1
 
@@ -256,30 +264,19 @@ class EnemyProjectile(pygame.sprite.Sprite):
         super().__init__()
         self.image = None
         self.rect = None
+        self.color = UFO_COLOR
+        self.enemy_projectile_width = 5
+        self.enemy_projectile_height = 10
         self.x = random.randint(10, 850)
         self.y = 90
         self.appear = False
-        self.rng_ceiling = 1  # Adjust this value as needed
         self.speed = 2
 
         # Initialize image and rect
         self.set_image(self.choose_projectile())
 
-    def display_enemy_projectile(self):
-        rng = random.randint(0, self.rng_ceiling)
-        if rng <= 1:
-            self.appear = True
-            self.rng_ceiling += 200
-            print(f"Enemy proj display ceiling: {self.rng_ceiling}")
-            return self.appear
-        else:
-            return self.appear
-
     def update(self, screen):
-        if self.display_enemy_projectile():
-            chosen_image = self.choose_projectile()
-            self.set_image(chosen_image)
-            self.draw(screen)
+        if self.appear:
             self.y += self.speed
             self.rect.y = self.y
 
@@ -288,7 +285,14 @@ class EnemyProjectile(pygame.sprite.Sprite):
                 self.appear = False
                 self.kill()  # Automatically removes from sprite groups
         else:
-            pass
+            # Reset the position and appearance flag
+            self.x = random.randint(10, 850)
+            self.y = 90
+            self.appear = True
+            self.set_image(self.choose_projectile())
+
+        # Draw the projectile on the screen
+        self.draw(screen)
 
     def draw(self, screen):
         if self.image:
@@ -296,7 +300,19 @@ class EnemyProjectile(pygame.sprite.Sprite):
 
     def set_image(self, image_path):
         self.image = pygame.image.load(image_path).convert_alpha()
+        self.image = self.change_image_color(image=self.image, new_color=self.color)
+        self.image = pygame.transform.scale(self.image, (self.enemy_projectile_width, self.enemy_projectile_height))
         self.rect = self.image.get_rect(center=(self.x, self.y))
+
+    def explode(self, screen):
+        print("Target hit! Enemy projectile exploded")
+        # Replace the enemy image with an explosion sprite
+        explosion_image = pygame.image.load("assets/sprites/space__0009_EnemyExplosion.png").convert_alpha()
+        self.image = pygame.transform.scale(explosion_image, (self.enemy_projectile_width,
+                                                              self.enemy_projectile_height))
+        screen.blit(self.image, self.rect)
+        # Remove the enemy from the group
+        self.kill()
 
     @staticmethod
     def choose_projectile():
@@ -308,22 +324,6 @@ class EnemyProjectile(pygame.sprite.Sprite):
         ]
         return random.choice(projectile_list)
 
-
-class Shield:
-    def __init__(self, x):
-        self.x = x
-        self.y = 600
-        self.shield_width = 110
-        self.shield_height = 70
-        self.color = DEFENDER_COLOR
-        self.image = pygame.image.load("assets/sprites/space__0008_ShieldFull.png").convert_alpha()
-        self.image = self.change_image_color(image=self.image, new_color=self.color)
-        self.image = pygame.transform.scale(self.image, (self.shield_width, self.shield_height))
-
-    def draw(self, screen):
-        # Draw player image at the current position
-        screen.blit(self.image, (self.x, self.y))
-
     @staticmethod
     def change_image_color(image, new_color):
         # Create a copy of the original image
@@ -331,6 +331,76 @@ class Shield:
         # Fill the image with the new color
         new_image.fill(new_color, special_flags=pygame.BLEND_MULT)
         return new_image
+
+
+class Shield(pygame.sprite.Sprite):
+    def __init__(self, x):
+        super().__init__()
+        self.x = x
+        self.y = 600
+        self.shield_width = 110
+        self.shield_height = 70
+        self.color = DEFENDER_COLOR
+        self.damage_level = 0  # Each shield will have 20 shades to indicate damage taken until complete destruction
+        self.max_damage_level = 19  # Maximum damage level before the shield explodes
+        self.image = pygame.image.load("assets/sprites/space__0008_ShieldFull.png").convert_alpha()
+        self.image = self.set_initial_color(image=self.image, initial_color=self.color)
+        self.image = pygame.transform.scale(self.image, (self.shield_width, self.shield_height))
+        self.rect = self.image.get_rect(topleft=(x, self.y))
+
+    def draw(self, screen):
+        # Draw shield image at the current position
+        screen.blit(self.image, (self.x, self.y))
+
+    def take_damage(self, screen):
+        # Check if the shield has reached maximum damage level
+        if self.damage_level > self.max_damage_level:
+            self.explode(screen)
+        else:
+            # Increase damage level
+            print("Shield has taken damage")
+            self.damage_level += 1
+            print(f"Damage level of shield {self.damage_level}")
+            self.update_image()
+
+    def explode(self, screen):
+        print("Shield has been destroyed")
+        explosion_image = pygame.image.load("assets/sprites/space__0009_EnemyExplosion.png").convert_alpha()
+        self.image = pygame.transform.scale(explosion_image, (self.shield_width, self.shield_height))
+        self.draw(screen)
+        # Remove the enemy from the group
+        self.kill()
+
+    def update_image(self):
+        # Update shield image based on damage level
+        damaged_color = self.damaged_colors(self.damage_level)
+        self.image = self.change_image_color(image=self.image, target_color=damaged_color)
+
+    @staticmethod
+    def set_initial_color(image, initial_color):
+        # Create copy of the original image
+        new_image = image.copy()
+        new_image.fill(initial_color, special_flags=pygame.BLEND_MULT)
+        return new_image
+
+    @staticmethod
+    def change_image_color(image, target_color):
+        # Create a copy of the original image
+        new_image = image.copy()
+        # Blend image color with white to lower RGB values
+        new_image.fill((0, 0, 0), special_flags=pygame.BLEND_MULT)
+        # Fill the image with the target color
+        new_image.fill(target_color, special_flags=pygame.BLEND_ADD)
+        return new_image
+
+    @staticmethod
+    def damaged_colors(damage_level):
+        try:
+            return SHIELD_DAMAGE_LIST[damage_level]
+        except IndexError:
+            print("Shield has been destroyed")
+            # You can return a default color or None here, depending on your needs
+            return UFO_COLOR
 
 
 class Baseline:
