@@ -1,9 +1,18 @@
 import pygame
 from game import main
-from config import STARTING_SPEED, STARTING_SCORE, STARTING_PROJECTILE_COOLDOWN
+from config import (ENEMY_STARTING_SPEED, STARTING_SCORE, STARTING_PROJECTILE_COOLDOWN, ENEMY_PROJECTILE_SPAWN_CHANCE,
+                    ENEMY_PROJECTILE_SPEED)
 
+"""TODO
+- Add gameover screen functionality(restart or quit?)
+- Add game mechanic for enemies getting to close to shields and eventually killing player if they get low enough
+- clear print statements
+- asses methods for non needed code
+- push to github
+"""
 
-main(STARTING_SPEED, STARTING_SCORE, STARTING_PROJECTILE_COOLDOWN)
+main(ENEMY_STARTING_SPEED, STARTING_SCORE, STARTING_PROJECTILE_COOLDOWN, ENEMY_PROJECTILE_SPAWN_CHANCE,
+     ENEMY_PROJECTILE_SPEED)
 
 """['arial', 'arialblack', 'bahnschrift', 'calibri', 'cambria', 'cambriamath', 'candara', 'comicsansms', 'consolas',
  'constantia', 'corbel', 'couriernew', 'ebrima', 'franklingothicmedium', 'gabriola', 'gadugi', 'georgia', 'impact',

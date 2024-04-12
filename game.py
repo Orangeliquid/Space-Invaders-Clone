@@ -3,10 +3,10 @@ import sys
 import random
 from entities import Player, Baseline, Shield, Enemy, Ufo, EnemyProjectile
 from score import Lives, Scoreboard
-from config import WINDOW_WIDTH, WINDOW_HEIGHT, ENEMY_PROJECTILE_SPAWN_CHANCE
+from config import WINDOW_WIDTH, WINDOW_HEIGHT, STARTING_PLAYER_LIVES
 
 
-def main(enemy_speed, starting_score, max_projectile_cooldown):
+def main(enemy_speed, starting_score, max_projectile_cooldown, enemy_projectile_spawn_chance, enemy_projectile_speed):
     pygame.init()
     clock = pygame.time.Clock()
 
@@ -21,7 +21,8 @@ def main(enemy_speed, starting_score, max_projectile_cooldown):
     baseline = Baseline()
 
     # Creates the player platform
-    player = Player(max_projectile_cooldown)
+    player = Player(max_projectile_cooldown, STARTING_PLAYER_LIVES)
+    player_single = pygame.sprite.GroupSingle(player)
 
     # Create the lives object and pass then player instance
     lives = Lives(player, 3)  # Assuming the player starts with 3 lives
@@ -64,6 +65,9 @@ def main(enemy_speed, starting_score, max_projectile_cooldown):
     # Add a flag to determine if an enemy projectile is active
     enemy_projectile_active = False
 
+    # Add a flag to determine if player has died
+    player_has_died = False
+
     # Main game loop
     while True:
         for event in pygame.event.get():
@@ -103,6 +107,7 @@ def main(enemy_speed, starting_score, max_projectile_cooldown):
         # Update game states
         player.update_projectiles(screen, all_enemies, ufo_single, scoreboard, all_shields)
         all_enemies.update()
+        lives.update_lives(screen)
 
         # Draw static scoreboard
         scoreboard.draw_starting_score(screen)
@@ -138,12 +143,12 @@ def main(enemy_speed, starting_score, max_projectile_cooldown):
 
         # Check if there's no enemy projectile on the screen, then spawn a new one
         if not enemy_projectile_active:
-            if random.randint(0, 1000) <= ENEMY_PROJECTILE_SPAWN_CHANCE:
+            if random.randint(0, 1000) <= enemy_projectile_spawn_chance:
                 enemy_projectile_active = True
-                new_enemy_projectile = EnemyProjectile()  # Create a new instance
+                new_enemy_projectile = EnemyProjectile(enemy_projectile_speed)  # Create a new instance
         else:
             # Update the existing enemy projectile
-            new_enemy_projectile.update(screen)
+            new_enemy_projectile.update(screen, scoreboard, all_shields, player_single, lives)
             if not new_enemy_projectile.appear:  # Check if it's no longer visible
                 enemy_projectile_active = False  # Set the flag to False
 
@@ -157,10 +162,18 @@ def main(enemy_speed, starting_score, max_projectile_cooldown):
             # Maintain current score
             last_score = scoreboard.score
 
+            # increase shooting speed
             max_projectile_cooldown -= .5
 
+            # increase chance for enemy projectile to spawn
+            enemy_projectile_spawn_chance += 5
+
+            # increase enemy projectile speed
+            enemy_projectile_speed += 1
+
             # Restart the level or proceed to the next level
-            main(enemy_speed, last_score, max_projectile_cooldown)
+            main(enemy_speed, last_score, max_projectile_cooldown, enemy_projectile_spawn_chance,
+                 enemy_projectile_speed)
         else:
             pass
 

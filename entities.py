@@ -1,5 +1,6 @@
 import pygame
-from config import DEFENDER_COLOR, UFO_COLOR, FONT_SIZE, FONT_NAME, WINDOW_WIDTH, WINDOW_HEIGHT, SHIELD_DAMAGE_LIST
+from config import (DEFENDER_COLOR, UFO_COLOR, FONT_SIZE, FONT_NAME, WINDOW_WIDTH, WINDOW_HEIGHT, SHIELD_DAMAGE_LIST,
+                    STARTING_PROJECTILE_COOLDOWN)
 import random
 
 ''' Entities to create for game
@@ -14,13 +15,15 @@ mystery alien = 1 runs across top screen above 40 point alien - worth 100 points
 '''
 
 
-class Player:
-    def __init__(self, projectile_cooldown_max):
+class Player(pygame.sprite.Sprite):
+    def __init__(self, projectile_cooldown_max, lives):
+        super().__init__()
         # Set attributes directly
         self.width = 60
         self.height = 40
         self.color = DEFENDER_COLOR
         self.speed = 7
+        self.lives = lives
         self.projectiles = pygame.sprite.Group()
         self.projectile_cooldown = 0
         self.projectile_cooldown_max = projectile_cooldown_max
@@ -81,6 +84,18 @@ class Player:
 
     def draw_projectiles(self, screen):
         self.projectiles.draw(screen)
+
+    def explode(self, screen):
+        print("Player hit! Explosion imminent")
+        # Replace the enemy image with an explosion sprite
+        explosion_image = pygame.image.load("assets/sprites/space__0010_PlayerExplosion.png").convert_alpha()
+        explosion_image = pygame.transform.scale(explosion_image, (self.width,
+                                                                   self.height))
+        screen.blit(explosion_image, self.rect)
+        self.rect.topleft = ((WINDOW_WIDTH - self.width) // 2, WINDOW_HEIGHT - 150)
+        self.projectiles.empty()
+        pygame.display.flip()  # Update the display to show the explosion
+        pygame.time.delay(100)  # Add a short delay to display the explosion effect
 
     @staticmethod
     def change_image_color(image, new_color):
@@ -227,7 +242,7 @@ class Ufo(pygame.sprite.Sprite):
         screen.blit(self.image, self.rect)
 
     def explode(self, screen):
-        print("Enemy Exploded!")  # Add this line to verify if explosion is triggered
+        print("UFO Exploded!")  # Add this line to verify if explosion is triggered
         # Replace the enemy image with an explosion sprite
         explosion_image = pygame.image.load("assets/sprites/space__0009_EnemyExplosion.png").convert_alpha()
         self.image = pygame.transform.scale(explosion_image, (self.width, self.height))
@@ -260,7 +275,7 @@ class PlayerProjectile(pygame.sprite.Sprite):
 
 
 class EnemyProjectile(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, speed):
         super().__init__()
         self.image = None
         self.rect = None
@@ -270,12 +285,12 @@ class EnemyProjectile(pygame.sprite.Sprite):
         self.x = random.randint(10, 850)
         self.y = 90
         self.appear = False
-        self.speed = 2
+        self.speed = speed
 
         # Initialize image and rect
         self.set_image(self.choose_projectile())
 
-    def update(self, screen):
+    def update(self, screen, scoreboard, all_shields, player_single, lives):
         if self.appear:
             self.y += self.speed
             self.rect.y = self.y
@@ -284,6 +299,30 @@ class EnemyProjectile(pygame.sprite.Sprite):
             if self.rect.top >= WINDOW_HEIGHT:
                 self.appear = False
                 self.kill()  # Automatically removes from sprite groups
+
+            else:
+                # Check if projectile hits any of the shields
+                shield_hit_list = pygame.sprite.spritecollide(self, all_shields, False)
+                for shield in shield_hit_list:
+                    shield.take_damage(screen)
+                    self.explode(screen)
+                    self.appear = False
+
+                # Check if projectile hits player
+                player_hit_list = pygame.sprite.spritecollide(self, player_single, False)
+                for player_hit in player_hit_list:
+                    print(player_hit)
+                    self.explode(screen)
+                    self.appear = False
+                    lives.draw_lives_lost_text(screen)
+                    player_hit.explode(screen)
+                    player_hit.lives -= 1
+                    # # print(player_hit.lives)
+                    # player_single.empty()  # Remove the existing player instance
+                    # player = Player(STARTING_PROJECTILE_COOLDOWN, player_hit.lives)  # Recreate the player instance
+                    # player_single.add(player)
+                    # print(f"player_single created: {player_single}")
+                    pygame.time.wait(2000)
         else:
             # Reset the position and appearance flag
             self.x = random.randint(10, 850)
@@ -305,11 +344,11 @@ class EnemyProjectile(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=(self.x, self.y))
 
     def explode(self, screen):
-        print("Target hit! Enemy projectile exploded")
+        print("Target hit! Enemy projectile exploded")  # Add this line to verify if explosion is triggered
         # Replace the enemy image with an explosion sprite
         explosion_image = pygame.image.load("assets/sprites/space__0009_EnemyExplosion.png").convert_alpha()
-        self.image = pygame.transform.scale(explosion_image, (self.enemy_projectile_width,
-                                                              self.enemy_projectile_height))
+        self.image = pygame.transform.scale(explosion_image,
+                                            (self.enemy_projectile_width + 20, self.enemy_projectile_height + 20))
         screen.blit(self.image, self.rect)
         # Remove the enemy from the group
         self.kill()

@@ -1,5 +1,5 @@
 import pygame
-from config import FONT_SIZE, FONT_NAME
+from config import FONT_SIZE, FONT_NAME, WINDOW_WIDTH, WINDOW_HEIGHT
 import os
 
 
@@ -14,6 +14,7 @@ class Lives:
         # Load the font
         font = pygame.font.SysFont(FONT_NAME, FONT_SIZE)
         # Create a text surface with "Credits"
+        # print(f"Lives class self.lives: {self.lives}")
         text_surface = font.render(str(self.lives), True, (255, 255, 255))  # White color
         # Get the rectangle of the text surface
         text_rect = text_surface.get_rect()
@@ -22,11 +23,34 @@ class Lives:
         # Draw the text surface on the screen
         screen.blit(text_surface, text_rect)
 
+    def draw_lives_lost_text(self, screen):
+        self.lives -= 1
+        # Load the font
+        font = pygame.font.SysFont(FONT_NAME, FONT_SIZE)
+        # Create a black surface with the same size as the text surface
+        text_surface = font.render("-1 Lives", True, (255, 255, 255))  # White color
+        text_rect = text_surface.get_rect()
+        # Set the position of the text surface to the center of the screen
+        text_rect.center = (WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2)
+        # Draw the text surface on the screen
+        screen.blit(text_surface, text_rect)
+        # Create a black surface with the same size as the text surface
+        # black_surface = pygame.Surface((text_rect.width, text_rect.height))
+        # black_surface.fill((0, 0, 0))  # Fill the black surface with the background color
+        # # Blit the black surface over the area where the text was drawn
+        # screen.blit(black_surface, text_rect)
+
     def draw_player_sprites(self, screen):
-        # Draw the first player image
-        screen.blit(self.player.image, (self.x + 50, self.y))
-        # Draw the second player image next to the first one
-        screen.blit(self.player.image, (self.x + 130, self.y))
+        if self.lives >= 2:
+            # Draw the first player image
+            screen.blit(self.player.image, (self.x + 50, self.y))
+        if self.lives == 3:
+            # Draw the second player image next to the first one
+            screen.blit(self.player.image, (self.x + 130, self.y))
+
+    def update_lives(self, screen):
+        self.draw_lives_text(screen)
+        self.draw_player_sprites(screen)
 
 
 class Scoreboard:
