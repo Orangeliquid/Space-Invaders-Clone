@@ -3,10 +3,11 @@ import sys
 import random
 from entities import Player, Baseline, Shield, Enemy, Ufo, EnemyProjectile
 from score import Lives, Scoreboard
-from config import WINDOW_WIDTH, WINDOW_HEIGHT, STARTING_PLAYER_LIVES
+from config import WINDOW_WIDTH, WINDOW_HEIGHT, STARTING_PLAYER_LIVES, FONT_NAME, FONT_SIZE, DEFENDER_COLOR, UFO_COLOR
 
 
-def main(enemy_speed, starting_score, max_projectile_cooldown, enemy_projectile_spawn_chance, enemy_projectile_speed):
+def main(enemy_speed, starting_score, max_projectile_cooldown, enemy_projectile_spawn_chance, enemy_projectile_speed,
+         intro_status):
     pygame.init()
     clock = pygame.time.Clock()
 
@@ -65,8 +66,25 @@ def main(enemy_speed, starting_score, max_projectile_cooldown, enemy_projectile_
     # Add a flag to determine if an enemy projectile is active
     enemy_projectile_active = False
 
-    # Add a flag to determine if player has died
-    player_has_died = False
+    font = pygame.font.Font(FONT_NAME, FONT_SIZE)
+    # Introductory phase
+    intro_text = font.render("Space Invaders!", True, DEFENDER_COLOR)
+    screen.blit(intro_text, (300, 350))
+    pygame.display.flip()
+
+    intro_active = intro_status
+
+    # Introductory phase
+    while intro_active:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        # Check for key press to skip intro
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT] or keys[pygame.K_RIGHT] or keys[pygame.K_SPACE]:
+            intro_active = False
 
     # Main game loop
     while True:
@@ -74,7 +92,8 @@ def main(enemy_speed, starting_score, max_projectile_cooldown, enemy_projectile_
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            elif event.type == pygame.KEYDOWN:
+
+            if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     player.move_left = True
                 elif event.key == pygame.K_RIGHT:
@@ -106,7 +125,7 @@ def main(enemy_speed, starting_score, max_projectile_cooldown, enemy_projectile_
 
         # Update game states
         player.update_projectiles(screen, all_enemies, ufo_single, scoreboard, all_shields)
-        all_enemies.update()
+        all_enemies.update(screen, all_shields, player_single)
         lives.update_lives(screen)
 
         # Draw static scoreboard
@@ -152,9 +171,38 @@ def main(enemy_speed, starting_score, max_projectile_cooldown, enemy_projectile_
             if not new_enemy_projectile.appear:  # Check if it's no longer visible
                 enemy_projectile_active = False  # Set the flag to False
 
+        if player.lives == 0:
+            # Display game over message
+            game_over_text = font.render("Game Over", True, UFO_COLOR)
+            screen.blit(game_over_text, (330, 200))
+            pygame.display.flip()
+            pygame.time.delay(2000)  # Wait for 2 seconds before checking for user input
+
+            # Ask the user if they want to play again
+            replay_text = font.render("Press Enter to Play Again", True, UFO_COLOR)
+            screen.blit(replay_text, (100, 300))
+            pygame.display.flip()
+
+            replay_text = font.render("or Backspace to Exit", False, UFO_COLOR)
+            screen.blit(replay_text, (150, 400))
+            pygame.display.flip()
+
+            waiting_for_input = True
+            while waiting_for_input:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
+                    elif event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_RETURN:  # Enter key
+                            return "restart"
+                        elif event.key == pygame.K_BACKSPACE:
+                            return "exit"
+
         # Check if all enemies are dead beside ufo
-        if all_enemies is None or len(all_enemies) == 0:
+        elif all_enemies is None or len(all_enemies) == 0:
             print("All enemies are dead")
+            print(f"all_enemies total: {all_enemies}")
 
             # Increase the speed of all enemies
             enemy_speed += 1
@@ -171,9 +219,12 @@ def main(enemy_speed, starting_score, max_projectile_cooldown, enemy_projectile_
             # increase enemy projectile speed
             enemy_projectile_speed += 1
 
+            # intro status false
+            intro_status = False
+
             # Restart the level or proceed to the next level
-            main(enemy_speed, last_score, max_projectile_cooldown, enemy_projectile_spawn_chance,
-                 enemy_projectile_speed)
+            return "new_round", (enemy_speed, last_score, max_projectile_cooldown, enemy_projectile_spawn_chance,
+                                 enemy_projectile_speed, intro_status)
         else:
             pass
 

@@ -89,8 +89,7 @@ class Player(pygame.sprite.Sprite):
         print("Player hit! Explosion imminent")
         # Replace the enemy image with an explosion sprite
         explosion_image = pygame.image.load("assets/sprites/space__0010_PlayerExplosion.png").convert_alpha()
-        explosion_image = pygame.transform.scale(explosion_image, (self.width,
-                                                                   self.height))
+        explosion_image = pygame.transform.scale(explosion_image, (self.width, self.height))
         screen.blit(explosion_image, self.rect)
         self.rect.topleft = ((WINDOW_WIDTH - self.width) // 2, WINDOW_HEIGHT - 150)
         self.projectiles.empty()
@@ -135,7 +134,7 @@ class Enemy(pygame.sprite.Sprite):
             return [pygame.image.load("assets/sprites/space__0004_C1.png").convert_alpha(),
                     pygame.image.load("assets/sprites/space__0005_C2.png").convert_alpha()]
 
-    def update(self):
+    def update(self, screen, all_shields, player_single):
         # Move horizontally
         self.rect.x += self.speed * self.direction
 
@@ -159,6 +158,18 @@ class Enemy(pygame.sprite.Sprite):
             # If so, reverse the direction and move down
             self.direction *= -1
             self.rect.y += self.enemy_height  # Move down
+
+        # Check if projectile hits any of the shields
+        shield_hit_list = pygame.sprite.spritecollide(self, all_shields, False)
+        for shield in shield_hit_list:
+            shield.take_damage(screen)
+
+        # Check if projectile hits player
+        player_hit_list = pygame.sprite.spritecollide(self, player_single, False)
+        for player_hit in player_hit_list:
+            print("enemies have touched player")
+            player_hit.explode(screen)
+            player_hit.lives = 0
 
     def explode(self, screen):
         print("Enemy Exploded!")  # Add this line to verify if explosion is triggered
