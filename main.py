@@ -4,10 +4,6 @@ import sys
 from config import (ENEMY_STARTING_SPEED, STARTING_SCORE, STARTING_PROJECTILE_COOLDOWN, ENEMY_PROJECTILE_SPAWN_CHANCE,
                     ENEMY_PROJECTILE_SPEED, INTRO_STATUS)
 
-"""TODO
-- push to github
-"""
-
 round_count = 1
 game_over = False
 
