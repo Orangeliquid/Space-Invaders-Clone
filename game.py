@@ -38,7 +38,7 @@ def main(enemy_speed, starting_score, max_projectile_cooldown, enemy_projectile_
     for x in shield_x_positions:
         shield = Shield(x)
         all_shields.add(shield)
-    print(all_shields)
+    # print(all_shields)
 
     # Create a group to hold all the enemy sprites
     all_enemies = pygame.sprite.Group()
@@ -60,7 +60,7 @@ def main(enemy_speed, starting_score, max_projectile_cooldown, enemy_projectile_
             enemy = Enemy(50 + i * 60, 250 + j * 50, 'C', speed=enemy_speed)
             all_enemies.add(enemy)
 
-    # Add a flag to check if the spacebar is pressed
+    # Add a flag to check if the space bar is pressed
     space_pressed = False
 
     # Add a flag to determine if an enemy projectile is active
@@ -99,7 +99,7 @@ def main(enemy_speed, starting_score, max_projectile_cooldown, enemy_projectile_
                 elif event.key == pygame.K_RIGHT:
                     player.move_right = True
                 elif event.key == pygame.K_SPACE:
-                    # Set the flag to indicate spacebar is pressed
+                    # Set the flag to indicate space bar is pressed
                     space_pressed = True
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT:
@@ -107,10 +107,10 @@ def main(enemy_speed, starting_score, max_projectile_cooldown, enemy_projectile_
                 elif event.key == pygame.K_RIGHT:
                     player.move_right = False
                 elif event.key == pygame.K_SPACE:
-                    # Reset the flag when spacebar is released
+                    # Reset the flag when space bar is released
                     space_pressed = False
 
-        # Shoot if spacebar is held down
+        # Shoot if space bar is held down
         if space_pressed:
             player.shoot()
 
@@ -155,9 +155,8 @@ def main(enemy_speed, starting_score, max_projectile_cooldown, enemy_projectile_
         # draw projectiles
         player.draw_projectiles(screen)
 
-        # draw the enemies
+        # draw the enemies and ufo
         all_enemies.draw(screen)
-
         ufo_single.update(screen)
 
         # Check if there's no enemy projectile on the screen, then spawn a new one
@@ -171,6 +170,7 @@ def main(enemy_speed, starting_score, max_projectile_cooldown, enemy_projectile_
             if not new_enemy_projectile.appear:  # Check if it's no longer visible
                 enemy_projectile_active = False  # Set the flag to False
 
+        # Check if player has expended all lives
         if player.lives == 0:
             # Display game over message
             game_over_text = font.render("Game Over", True, UFO_COLOR)
@@ -183,6 +183,7 @@ def main(enemy_speed, starting_score, max_projectile_cooldown, enemy_projectile_
             screen.blit(replay_text, (100, 300))
             pygame.display.flip()
 
+            # This extra blit will be displayed under the blit above
             replay_text = font.render("or Backspace to Exit", False, UFO_COLOR)
             screen.blit(replay_text, (150, 400))
             pygame.display.flip()
@@ -210,7 +211,7 @@ def main(enemy_speed, starting_score, max_projectile_cooldown, enemy_projectile_
             # Maintain current score
             last_score = scoreboard.score
 
-            # increase shooting speed
+            # increase shooting speed by lowering max projectile cooldown
             max_projectile_cooldown -= .5
 
             # increase chance for enemy projectile to spawn
@@ -219,7 +220,7 @@ def main(enemy_speed, starting_score, max_projectile_cooldown, enemy_projectile_
             # increase enemy projectile speed
             enemy_projectile_speed += 1
 
-            # intro status false
+            # intro status false, it only plays for the first round
             intro_status = False
 
             # Restart the level or proceed to the next level
@@ -233,4 +234,3 @@ def main(enemy_speed, starting_score, max_projectile_cooldown, enemy_projectile_
 
         # Cap the frame rate
         clock.tick(60)
-

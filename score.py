@@ -34,11 +34,6 @@ class Lives:
         text_rect.center = (WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2)
         # Draw the text surface on the screen
         screen.blit(text_surface, text_rect)
-        # Create a black surface with the same size as the text surface
-        # black_surface = pygame.Surface((text_rect.width, text_rect.height))
-        # black_surface.fill((0, 0, 0))  # Fill the black surface with the background color
-        # # Blit the black surface over the area where the text was drawn
-        # screen.blit(black_surface, text_rect)
 
     def draw_player_sprites(self, screen):
         if self.lives >= 2:

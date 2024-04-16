@@ -1,6 +1,5 @@
 import pygame
-from config import (DEFENDER_COLOR, UFO_COLOR, FONT_SIZE, FONT_NAME, WINDOW_WIDTH, WINDOW_HEIGHT, SHIELD_DAMAGE_LIST,
-                    STARTING_PROJECTILE_COOLDOWN)
+from config import (DEFENDER_COLOR, UFO_COLOR, FONT_SIZE, FONT_NAME, WINDOW_WIDTH, WINDOW_HEIGHT, SHIELD_DAMAGE_LIST)
 import random
 
 ''' Entities to create for game
@@ -61,8 +60,8 @@ class Player(pygame.sprite.Sprite):
                 # Check for collisions with enemies
                 enemy_hit_list = pygame.sprite.spritecollide(projectile, alien_list, True)
                 for enemy in enemy_hit_list:
-                    print("Enemy Hit!!!")
-                    print(enemy)
+                    # print("Enemy Hit!!!")
+                    # print(enemy)
                     enemy.explode(screen)
                     scoreboard.update_score(20)
                     self.projectiles.remove(projectile)
@@ -70,7 +69,7 @@ class Player(pygame.sprite.Sprite):
                 # Check for collision with Ufo
                 ufo_hit = pygame.sprite.spritecollideany(projectile, ufo_single)
                 if ufo_hit:
-                    print("Ufo Hit")
+                    # print("Ufo Hit")
                     ufo_hit.explode(screen)
                     scoreboard.update_score(100)
 
@@ -172,7 +171,7 @@ class Enemy(pygame.sprite.Sprite):
             player_hit.lives = 0
 
     def explode(self, screen):
-        print("Enemy Exploded!")  # Add this line to verify if explosion is triggered
+        # print("Enemy Exploded!")  # Add this line to verify if explosion is triggered
         # Replace the enemy image with an explosion sprite
         explosion_image = pygame.image.load("assets/sprites/space__0009_EnemyExplosion.png").convert_alpha()
         self.image = pygame.transform.scale(explosion_image, (self.enemy_width, self.enemy_height))
@@ -212,7 +211,7 @@ class Ufo(pygame.sprite.Sprite):
         self.frame_counter = 0
         self.animation_delay = 10  # Adjust this value to control animation speed
         self.window_width = WINDOW_WIDTH
-        self.image = pygame.image.load("assets/sprites/space__0007_UFO.png").convert_alpha()  # Load player image
+        self.image = pygame.image.load("assets/sprites/space__0007_UFO.png").convert_alpha()  # Load ufo image
         self.image = self.change_image_color(image=self.image, new_color=self.color)
         self.image = pygame.transform.scale(self.image, (self.width, self.height))
         self.rect = self.image.get_rect()
@@ -222,8 +221,8 @@ class Ufo(pygame.sprite.Sprite):
         rng = random.randint(0, self.rng_ceiling)
         if rng <= 1:
             self.appear = True
-            self.rng_ceiling += 200
-            print(self.rng_ceiling)
+            self.rng_ceiling += 200  # This aims to make the appearance chance rarer for the ufo
+            # print(self.rng_ceiling)
             return self.appear
         else:
             return self.appear
@@ -243,7 +242,7 @@ class Ufo(pygame.sprite.Sprite):
             if self.rect.left <= 0 or self.rect.right >= WINDOW_WIDTH:
                 # If so, reverse the direction by changing x val
                 self.appear = False
-                self.direction *= -1
+                self.direction *= -1  # change direction to go back the way the ufo left the screen
                 self.x = 800
         else:
             pass
@@ -253,7 +252,7 @@ class Ufo(pygame.sprite.Sprite):
         screen.blit(self.image, self.rect)
 
     def explode(self, screen):
-        print("UFO Exploded!")  # Add this line to verify if explosion is triggered
+        # print("UFO Exploded!")  # Add this line to verify if explosion is triggered
         # Replace the enemy image with an explosion sprite
         explosion_image = pygame.image.load("assets/sprites/space__0009_EnemyExplosion.png").convert_alpha()
         self.image = pygame.transform.scale(explosion_image, (self.width, self.height))
@@ -288,8 +287,8 @@ class PlayerProjectile(pygame.sprite.Sprite):
 class EnemyProjectile(pygame.sprite.Sprite):
     def __init__(self, speed):
         super().__init__()
-        self.image = None
-        self.rect = None
+        self.image = None  # This is set later during the update method call
+        self.rect = None  # This is set later during the set_image method call
         self.color = UFO_COLOR
         self.enemy_projectile_width = 5
         self.enemy_projectile_height = 10
@@ -328,11 +327,6 @@ class EnemyProjectile(pygame.sprite.Sprite):
                     lives.draw_lives_lost_text(screen)
                     player_hit.explode(screen)
                     player_hit.lives -= 1
-                    # # print(player_hit.lives)
-                    # player_single.empty()  # Remove the existing player instance
-                    # player = Player(STARTING_PROJECTILE_COOLDOWN, player_hit.lives)  # Recreate the player instance
-                    # player_single.add(player)
-                    # print(f"player_single created: {player_single}")
                     pygame.time.wait(2000)
         else:
             # Reset the position and appearance flag
@@ -355,7 +349,7 @@ class EnemyProjectile(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=(self.x, self.y))
 
     def explode(self, screen):
-        print("Target hit! Enemy projectile exploded")  # Add this line to verify if explosion is triggered
+        # print("Target hit! Enemy projectile exploded")  # Add this line to verify if explosion is triggered
         # Replace the enemy image with an explosion sprite
         explosion_image = pygame.image.load("assets/sprites/space__0009_EnemyExplosion.png").convert_alpha()
         self.image = pygame.transform.scale(explosion_image,
@@ -408,13 +402,13 @@ class Shield(pygame.sprite.Sprite):
             self.explode(screen)
         else:
             # Increase damage level
-            print("Shield has taken damage")
+            # print("Shield has taken damage")
             self.damage_level += 1
-            print(f"Damage level of shield {self.damage_level}")
+            # print(f"Damage level of shield {self.damage_level}")
             self.update_image()
 
     def explode(self, screen):
-        print("Shield has been destroyed")
+        # print("Shield has been destroyed")
         explosion_image = pygame.image.load("assets/sprites/space__0009_EnemyExplosion.png").convert_alpha()
         self.image = pygame.transform.scale(explosion_image, (self.shield_width, self.shield_height))
         self.draw(screen)
@@ -448,9 +442,11 @@ class Shield(pygame.sprite.Sprite):
         try:
             return SHIELD_DAMAGE_LIST[damage_level]
         except IndexError:
-            print("Shield has been destroyed")
+            # print("Shield has been destroyed")
             # You can return a default color or None here, depending on your needs
             return UFO_COLOR
+            # this UFO_COLOR is a shade of red, meaning once out of index the shield will already be this shade of red
+            # this helps the game not stop due to out of index error and change the color to red - destruction soon
 
 
 class Baseline:
