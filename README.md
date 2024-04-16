@@ -1,6 +1,6 @@
 # Space Invaders Clone via Pygame
 
-This is my take on the classic game of Space Invaders! I utitilze Pygame to create a similar experience with my own twists. The enemies move differently than the original. Instead of moving as a unit when a wall is met, the enemies that touch the wall are moved down. Additionally, the shields do not visually crumble when hit, instead they change from lime green to red. This indicates damage level. After each round the enemies, enemy projectiles, and player projectiles all gain more speed. This makes the game harder! My high score is about 9500, feel free to try and beat my score, or add your own elements to the game!
+This is my take on the classic game of 'Space Invaders'! I utitilize Pygame to create a similar experience with my own twists. The enemies move differently than the original. Instead of moving as a unit when a wall is met, the enemies that touch the wall are moved down. Additionally, the shields do not visually crumble when hit, instead they change from lime green to red. This indicates damage level. After each round the enemies, enemy projectiles, and player projectiles all gain more speed. This makes the game harder! My high score is about 9500, feel free to try and beat my score, or add your own elements to the game!
 
 In the future, I would like to implement original game sounds and better enemy movement.
 
@@ -52,7 +52,7 @@ To run the Space-Invaders-Clone, follow these steps:
 
 ## Features
 
-- Fast paced Space Invaders look alike!
+- Fast paced 'Space Invaders' look alike!
 - Multiple sprites for enemy movement, enemy projectiles, and many more!
 - Top score functionality for tracking best game played
 - Increasing difficulty as rounds progress
