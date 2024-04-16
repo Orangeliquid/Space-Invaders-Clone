@@ -65,7 +65,7 @@ To run the Space-Invaders-Clone, follow these steps:
 
 ### Player Death
 
-![Space_invaders_player_death](https://github.com/Orangeliquid/Space-Invaders-Clone/assets/127478612/c9bacab7-d17e-4dde-8327-a743f5d960c8)
+![Space_invaders_player_death1](https://github.com/Orangeliquid/Space-Invaders-Clone/assets/127478612/c969f2a7-eca8-4ce1-81e7-26730f751895)
 
 ### Shields Damaged
 
