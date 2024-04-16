@@ -28,7 +28,7 @@ class Lives:
         # Load the font
         font = pygame.font.SysFont(FONT_NAME, FONT_SIZE)
         # Create a black surface with the same size as the text surface
-        text_surface = font.render("-1 Lives", True, (255, 255, 255))  # White color
+        text_surface = font.render("-1 Life", True, (255, 255, 255))  # White color
         text_rect = text_surface.get_rect()
         # Set the position of the text surface to the center of the screen
         text_rect.center = (WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2)
